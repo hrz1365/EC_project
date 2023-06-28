@@ -13,5 +13,5 @@ Currently, this project follows these steps to assess the neighborhood effects o
 
 # Scripts
 ## R scripts
-- ancillary_functions.R: An script that contains several functions used in the program.
-- cons_features.R: An script to generate feature space based on buffers of time-invariant attributes such as elevation. The template data-frames and vector points for the feature space are created by this script. Therefore, it should be run first.
+- **ancillary_functions.R**: An script that contains several functions used in the program.
+- **cons_features.R**: An script to generate feature space based on buffers of time-invariant attributes such as elevation. The template data-frames and vector points for the feature space are created by this script. Therefore, it should be run first.
