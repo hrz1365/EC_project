@@ -12,3 +12,5 @@ Currently, this project follows these steps to assess the neighborhood effects o
 7. Convert the outcomes back to rasters
 
 # Scripts
+## R scripts
+-ancillary_functions.R: An script that contains several functions used in the program.
