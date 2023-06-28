@@ -13,4 +13,4 @@ Currently, this project follows these steps to assess the neighborhood effects o
 
 # Scripts
 ## R scripts
--ancillary_functions.R: An script that contains several functions used in the program.
+- ancillary_functions.R: An script that contains several functions used in the program.
