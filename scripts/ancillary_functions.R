@@ -19,7 +19,7 @@ pd <- reticulate::import('pandas')
 
 
 
-# Main Body ---------------------------------------------------------------
+# Main Body --------------------------------------------------------------
 
 # Aggregate an input raster by an order of magnitude to and write it to an address
 aggregate_raster <- function(input_raster, fact = 10, fun = 'mean', output_path){

@@ -166,3 +166,4 @@ country_vectors/
 initial_rasters/
 .Rproj.user
 renv/
+feature_space/
