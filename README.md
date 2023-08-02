@@ -18,4 +18,15 @@ Currently, this project follows these steps to assess the neighborhood effects o
   - generate_features: A function to generate feature points and the initial feature space. The number of points in the vector feature file corresponds to the number of observations.
   - read_ml_outpus:
   - generate_ml_raster:     
-- **cons_features.R**: An script to generate feature space based on buffers of time-invariant attributes such as elevation. The template data-frames and vector points for the feature space are created by this script. Therefore, it should be run first.
+- **cons_features.R**: An script to generate feature space based on buffers of time-invariant attributes such as elevation, slope, land mask, etc. The template data-frames and vector points for the feature space are first created by this script using the generate_features function. Therefore, this function should be run before other R scripts. In general, this script does the following for a given country:
+  - Read the first level admin area (JRC provided) and project it to Mollweide.
+  - Read the time-invariant rasters (e.g., elevation and land mask) and extract them to the boundary.
+  - Generate slope raster based on elevation.
+  - Aggregate initial rasters (100m) to 1km using the aggregate_raster function.
+  - Generate the feature space, both in vector and tabular formats, using the generate_features function.
+  - for each buffer size (5km, 10km, 25km, 50km, 100km):
+    - Create a circular neighborhood (radius = buffer size)
+    - Create focal rasters by assigning to the focal cell the mean of values in its nighborhood
+    - Extract focal rasters to feature points
+    - Add values to the tabular feature space
+    - Save the resulting data-frame as a table  
