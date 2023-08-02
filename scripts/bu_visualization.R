@@ -7,12 +7,17 @@
 
 
 
+
 # Options and Packages ----------------------------------------------------
 
-if (!require(tidyverse))  install.packages('tidyverse')  else library(tidyverse)
-if (!require(data.table)) install.packages('data.table') else library(data.table)
-if (!require(terra))      install.packages('terra')      else library(terra)
-# if (!require(sf))         install.packages('sf')         else library(sf)
+if (!requireNamespace('terra', quietly = T))         install.packages('terra') 
+if (!requireNamespace('data.table', quietly = T))    install.packages('data.table') 
+if (!requireNamespace('tidyverse', quietly = T))     install.packages('tidyverse') 
+
+
+library(terra)
+library(data.table)
+library(tidyverse)
 
 source(file.path('scripts', 'ancillary_functions.R'))
 
@@ -35,13 +40,10 @@ cur_country <- 'ken'
 
 # Main Program ------------------------------------------------------------
 
-admin_0   <- file.path(boundaries_path, str_c(cur_country, '_adm0.gpkg')) %>%
+admin_0   <- file.path(boundaries_path, str_c(cur_country, '_adm.gpkg')) %>%
   vect() %>%
   project('ESRI:54009')
 
-admin_1   <- file.path(boundaries_path, str_c(cur_country, '_adm0.gpkg')) %>%
-  vect() %>%
-  project('ESRI:54009')
 
 bu_raster <- rast(file.path(bu_path, 'BUTOT_MEDIAN.tif'))
 

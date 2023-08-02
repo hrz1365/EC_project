@@ -10,9 +10,14 @@
 
 # Options and Packages ----------------------------------------------------
 
-if (!require(terra))        install.packages('terra')       else library(terra)
-if (!require(data.table))   install.packages('data.table')  else library(data.table)
-if (!require(tidyverse))    install.packages('tidyverse')   else library(tidyverse)
+if (!requireNamespace('terra', quietly = T))         install.packages('terra') 
+if (!requireNamespace('data.table', quietly = T))    install.packages('data.table') 
+if (!requireNamespace('tidyverse', quietly = T))     install.packages('tidyverse') 
+
+
+library(terra)
+library(data.table)
+library(tidyverse)
 
 
 
@@ -20,12 +25,12 @@ if (!require(tidyverse))    install.packages('tidyverse')   else library(tidyver
 # Inputs and Path ---------------------------------------------------------
 
 cur_country     <- 'ken'
-buffer_sizes    <- c(5000, 10000, 25000, 50000) 
-fst_actual_year <- 1970
+buffer_sizes    <- c(5000, 10000, 25000, 50000, 100000) 
+fst_actual_year <- 1980
 lst_actual_year <- 2020
 built_up_yrs    <- seq(fst_actual_year, lst_actual_year, 10)
-fst_year        <- 2000
-lst_year        <- 2040
+fst_year        <- 1980
+lst_year        <- 2010
 
 
 boundaries_path     <- 'boundaries'
@@ -43,7 +48,7 @@ feature_points_path <- file.path(fs_path, str_c(cur_country, '_feature_points_ra
 cur_bu_raster_1km <- file.path(rasters_path, paste0(cur_country, '_bu', '.tif')) %>%
   rast()
 
-cur_elev_raster_1km <- file.path(rasters_path, str_c(cur_country, '_DEM', '.tif')) %>%
+cur_elev_raster_1km <- file.path(rasters_path, str_c(cur_country, '_elev', '.tif')) %>%
   rast()
 
 
@@ -77,9 +82,9 @@ for (year in seq(fst_year, lst_year, 10)){
 
 
   # Extract built-up raster to points
-  builtup_extraction <- terra::extract(cur_bu_layer, feature_points, method = 'simple',
-                                        bind = T)
-  feature_space_df[, str_c('bu_', year)] <- builtup_extraction[[2]]
+  # builtup_extraction <- terra::extract(cur_bu_layer, feature_points, method = 'simple',
+  #                                       bind = T)
+  # feature_space_df[, str_c('bu_', year)] <- builtup_extraction[[2]]
   
   
   for (buffer_size in buffer_sizes){
@@ -114,7 +119,7 @@ if (lst_year < 2020) {
   cur_bu_layer       <- cur_bu_raster_1km[[15]]
   builtup_extraction <- terra::extract(cur_bu_layer, feature_points, method = 'simple',
                                        bind = T)
-  feature_space_df[, 'bu_2020'] <- builtup_extraction[['BUT_15']]
+  feature_space_df[, 'bu_2020'] <- builtup_extraction[[2]]
   
   
   # Categorize different levels of built-up in 2020
@@ -129,6 +134,6 @@ if (lst_year < 2020) {
 
 # Save the final data-frame
 fwrite(feature_space_df, file.path(fs_path, str_c(cur_country,
-                                                  '_bu_fs_all_', lst_year, '.csv')))
+                                                  '_bu_fs_', lst_year, '.csv')))
 
 

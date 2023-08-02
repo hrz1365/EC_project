@@ -8,6 +8,7 @@
 
 # Pacakages 
 from pathlib import Path 
+import pandas as pd
 import pickle
 
 
@@ -18,11 +19,11 @@ fs_dir                  = main_dir / 'feature_space'
 model_output_path       = main_dir / 'ml_outputs'
 train_ids_pkl           = fs_dir / 'train_ids.pkl'
 test_ids_pkl            = fs_dir / 'test_ids.pkl'
-bu_feature_space_path   = fs_dir / 'ken_bu_fs_all.csv'
-elev_feature_space_path = fs_dir / 'ken_elev_fs.csv'
+bu_feature_space_path   = fs_dir / 'ken_bu_fs_2010.csv'
+con_feature_space_path  = fs_dir / 'ken_const_fs.csv'
 
 
-num_time_steps, dim_var_features, dim_cons_features = 5, 5, 4
+num_time_steps, dim_var_features, dim_cons_features = 4, 5, 15
 model_name = 'lstm_elev_bu_all_2020.h5'
 
 
@@ -31,10 +32,10 @@ model_name = 'lstm_elev_bu_all_2020.h5'
 
 # Initial features
 bu_feature_space_df   = pd.read_csv(bu_feature_space_path)
-elev_feature_space_df = pd.read_csv(elev_feature_space_path)
+con_feature_space_df  = pd.read_csv(con_feature_space_path)
 
 
-model_obj = buPredictionModel(bu_feature_space_df, elev_feature_space_df, num_time_steps, 
+model_obj = buPredictionModel(bu_feature_space_df, con_feature_space_df, num_time_steps, 
                               dim_var_features, dim_cons_features)
 
 
@@ -57,7 +58,7 @@ else:
 
 
 # Extract train and test datasets
-train_bu, test_bu, train_elev, test_elev = model_obj.train_test_extract(train_ids, test_ids)
+train_bu, test_bu, train_con, test_con = model_obj.train_test_extract(train_ids, test_ids)
 
 
 cur_model = model_obj.define()
@@ -67,12 +68,12 @@ cur_model = model_obj.define()
 x_train_bu, x_test_bu = train_bu.iloc[:, :-1].values, test_bu.iloc[:, :-1].values
 y_train_bu, y_test_bu = train_bu.iloc[:, -1], test_bu.iloc[:, -1]
 
-# Scale elevation data between 0 and 1
-elev_scaler, x_train_elev_scaled, x_test_elev_scaled  = model_obj.scale_features(train_elev, test_elev)
+# Scale constant data (elevation, slope, etc) between 0 and 1
+con_scaler, x_train_con_scaled, x_test_con_scaled  = model_obj.scale_features(train_con, test_con)
 
 
-cur_model, history = model_obj.model_fit(cur_model, x_train_bu, x_train_elev_scaled,
-                                         x_test_bu, x_test_elev_scaled,
+cur_model, history = model_obj.model_fit(cur_model, x_train_bu, x_train_con_scaled,
+                                         x_test_bu, x_test_con_scaled,
                                          y_train_bu, y_test_bu)
 loss = history.history
 

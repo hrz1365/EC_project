@@ -10,9 +10,14 @@
 
 # Options and Packages ----------------------------------------------------
 
-if (!require(terra))        install.packages('terra')       else library(terra)
-if (!require(data.table))   install.packages('data.table')  else library(data.table)
-if (!require(tidyverse))    install.packages('tidyverse')   else library(tidyverse)
+if (!requireNamespace('terra', quietly = T))         install.packages('terra') 
+if (!requireNamespace('data.table', quietly = T))    install.packages('data.table') 
+if (!requireNamespace('tidyverse', quietly = T))     install.packages('tidyverse') 
+
+
+library(terra)
+library(data.table)
+library(tidyverse)
 
 source(file.path('scripts', 'ancillary_functions.R'))
 
@@ -27,15 +32,14 @@ rasters_path     <- 'country_rasters'
 fs_path          <- 'feature_space'
 
 cur_country  <- 'ken'
-cur_variable <- 'elev'
-buffer_sizes <- c(5000, 10000, 25000, 50000) 
+buffer_sizes <- c(5000, 10000, 25000, 50000, 100000) 
 
 
 
 
 # Main Program ------------------------------------------------------------
 
-admin_0   <- file.path(boundaries_path, str_c(cur_country, '_adm0.gpkg')) %>%
+admin_0   <- file.path(boundaries_path, str_c(cur_country, '_adm.gpkg')) %>%
   vect() %>%
   project('ESRI:54009')
 
@@ -48,10 +52,18 @@ cur_elev_raster <- file.path(ini_rasters_path, paste0(cur_country, '_DEM', '.tif
   mask(admin_0)
 
 
+# Create the slope raster
+cur_slope_raster <- terrain(cur_elev_raster, v = 'slope')
 
-# Aggregate the initial raster to 1KM
-cur_elev_raster_1km <- aggregate_raster(cur_elev_raster, fact = 10, fun = 'mean',
-                                        file.path(rasters_path, str_c(cur_country, '_DEM', '.tif')))
+
+
+# Aggregate the elevation and slope rasters to 1KM
+cur_elev_raster_1km  <- aggregate_raster(cur_elev_raster, fact = 10, fun = 'mean',
+                                        file.path(rasters_path, str_c(cur_country, '_elev', '.tif')))
+
+cur_slope_raster_1km <- aggregate_raster(cur_slope_raster, fact = 10, fun = 'mean',
+                                        file.path(rasters_path, str_c(cur_country, '_slope', '.tif')))
+
 
 
 # Generate feature space points and df
@@ -100,20 +112,26 @@ for (buffer_size in buffer_sizes){
   neighborhood[neighborhood > 0] <- 1
   
   
-  # Derive the focal raster based  on the neighborhood
-  focal_raster <- focal(cur_elev_raster_1km, w = neighborhood, fun = mean,
-                        fillvalue = NA, expand = F, na.rm = T)
+  # Derive the focal elevation and slope rasters based  on the neighborhood
+  focal_elev_raster  <- focal(cur_elev_raster_1km, w = neighborhood, fun = mean,
+                              fillvalue = NA, expand = F, na.rm = T)
+  
+  focal_slope_raster <- focal(cur_slope_raster_1km, w = neighborhood, fun = mean,
+                              fillvalue = NA, expand = F, na.rm = T)
   
   
   # Extract focal raster to points 
-  focal_extraction <- terra::extract(focal_raster, feature_points, method = 'simple', bind = T)
+  focal_elev_extraction  <- terra::extract(focal_elev_raster, feature_points, 
+                                           method = 'simple', bind = T)
+  focal_slope_extraction <- terra::extract(focal_slope_raster, feature_points, 
+                                           method = 'simple', bind = T)
   
   
-  feature_space_df[, str_c(cur_variable, '_buf_', buffer_size)] <- focal_extraction[, 2]
+  feature_space_df[, str_c('elev_buf_', buffer_size)]  <- focal_elev_extraction[[2]]
+  feature_space_df[, str_c('slope_buf_', buffer_size)] <- focal_slope_extraction[[2]]
 }
 
 
 # Save the final data-frame
-fwrite(feature_space_df, file.path(fs_path, str_c(cur_country, '_', cur_variable,
-                                                  '_fs.csv')))
+fwrite(feature_space_df, file.path(fs_path, str_c(cur_country, '_const_fs.csv')))
 
