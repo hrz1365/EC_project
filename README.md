@@ -13,5 +13,9 @@ Currently, this project follows these steps to assess the neighborhood effects o
 
 # Scripts
 ## R scripts
-- **ancillary_functions.R**: An script that contains several functions used in the program.
+- **ancillary_functions.R**: An script that contains several functions used in the model. These functions are:
+  - aggregate_raster: A function to generate 1KM rasters from 100m rasters.
+  - generate_features: A function to generate feature points and the initial feature space. The number of points in the vector feature file corresponds to the number of observations.
+  - read_ml_outpus:
+  - generate_ml_raster:     
 - **cons_features.R**: An script to generate feature space based on buffers of time-invariant attributes such as elevation. The template data-frames and vector points for the feature space are created by this script. Therefore, it should be run first.
