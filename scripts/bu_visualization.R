@@ -55,9 +55,6 @@ cur_bu_raster <- bu_raster %>%
   terra::mask(admin_0)
 
 
-# Change the values to proportion
-cur_bu_raster <- cur_bu_raster / 10000
-
 
 # Aggregate by an order of magnitude to 1km resolution
 cur_bu_raster_1km <- aggregate_raster(cur_bu_raster, fact = 10, fun = 'mean',

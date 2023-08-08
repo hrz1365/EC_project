@@ -19,6 +19,8 @@ library(terra)
 library(data.table)
 library(tidyverse)
 
+source(file.path('scripts', 'ancillary_functions.R'))
+
 
 
 
@@ -26,7 +28,7 @@ library(tidyverse)
 
 cur_country     <- 'ken'
 buffer_sizes    <- c(5000, 10000, 25000, 50000, 100000) 
-fst_actual_year <- 1980
+fst_actual_year <- 1970
 lst_actual_year <- 2020
 built_up_yrs    <- seq(fst_actual_year, lst_actual_year, 10)
 fst_year        <- 1980
@@ -47,6 +49,12 @@ feature_points_path <- file.path(fs_path, str_c(cur_country, '_feature_points_ra
 
 cur_bu_raster_1km <- file.path(rasters_path, paste0(cur_country, '_bu', '.tif')) %>%
   rast()
+
+
+for (i in seq(1, 17)){
+  
+  cur_bu_raster_1km[[i]] <- cur_bu_raster_1km[[i]] / max(values(cur_bu_raster_1km[[i]]), na.rm = T)
+}
 
 cur_elev_raster_1km <- file.path(rasters_path, str_c(cur_country, '_elev', '.tif')) %>%
   rast()
@@ -80,12 +88,6 @@ for (year in seq(fst_year, lst_year, 10)){
                                           cur_elev_raster_1km)
   }
 
-
-  # Extract built-up raster to points
-  # builtup_extraction <- terra::extract(cur_bu_layer, feature_points, method = 'simple',
-  #                                       bind = T)
-  # feature_space_df[, str_c('bu_', year)] <- builtup_extraction[[2]]
-  
   
   for (buffer_size in buffer_sizes){
     
@@ -124,9 +126,10 @@ if (lst_year < 2020) {
   
   # Categorize different levels of built-up in 2020
   feature_space_df[, bu_category := fcase(
-    (bu_2020 >= 0)    & (bu_2020 < 0.01), 1,
-    (bu_2020 >= 0.01) & (bu_2020 < 0.05),  2,
-    (bu_2020 >= 0.05)  & (bu_2020 <= max(bu_2020)), 3
+     bu_2020 <= quantile(bu_2020, 0.5), 1,
+    (bu_2020 > quantile(bu_2020, 0.5)) & (bu_2020 <= quantile(bu_2020, 0.75)), 2,
+    (bu_2020 > quantile(bu_2020, 0.75)) & (bu_2020 <= quantile(bu_2020, 0.9)), 3,
+    (bu_2020 > quantile(bu_2020, 0.9)), 4
   )]
 }
 

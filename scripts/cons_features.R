@@ -46,7 +46,7 @@ admin_0   <- file.path(boundaries_path, str_c(cur_country, '_adm.gpkg')) %>%
 
 
 # Initial elevation raster at 100m
-cur_elev_raster <- file.path(ini_rasters_path, paste0(cur_country, '_DEM', '.tif')) %>%
+cur_elev_raster <- file.path(ini_rasters_path, paste0(cur_country, '_DEM.tif')) %>%
   rast() %>%
   crop(admin_0) %>%
   mask(admin_0)
@@ -56,6 +56,13 @@ cur_elev_raster <- file.path(ini_rasters_path, paste0(cur_country, '_DEM', '.tif
 cur_slope_raster <- terrain(cur_elev_raster, v = 'slope')
 
 
+# Read the landmask raster
+cur_lm_raster <- file.path(ini_rasters_path, paste0(cur_country, '_LandMask.tif')) %>%
+  rast() %>%
+  crop(admin_0) %>%
+  mask(admin_0)
+
+
 
 # Aggregate the elevation and slope rasters to 1KM
 cur_elev_raster_1km  <- aggregate_raster(cur_elev_raster, fact = 10, fun = 'mean',
@@ -63,6 +70,12 @@ cur_elev_raster_1km  <- aggregate_raster(cur_elev_raster, fact = 10, fun = 'mean
 
 cur_slope_raster_1km <- aggregate_raster(cur_slope_raster, fact = 10, fun = 'mean',
                                         file.path(rasters_path, str_c(cur_country, '_slope', '.tif')))
+
+cur_lm_raster_1km    <- aggregate_raster(cur_lm_raster, fact = 10, fun = 'mean',
+                                         file.path(rasters_path, str_c(cur_country, '_lm', '.tif')))
+
+# Load the protect area raster, which has already been processes elsewhere
+cur_pa_raster_1km <- rast(file.path(rasters_path, str_c(cur_country, '_pa.tif')))
 
 
 
@@ -119,16 +132,29 @@ for (buffer_size in buffer_sizes){
   focal_slope_raster <- focal(cur_slope_raster_1km, w = neighborhood, fun = mean,
                               fillvalue = NA, expand = F, na.rm = T)
   
+  focal_lm_raster    <- focal(cur_lm_raster_1km, w = neighborhood, fun = mean,
+                              fillvalue = NA, expand = F, na.rm = T)
+  
+  focal_pa_raster    <- focal(cur_pa_raster_1km, w = neighborhood, fun = mean,
+                              fillvalue = NA, expand = F, na.rm = T)
+  
+  
   
   # Extract focal raster to points 
   focal_elev_extraction  <- terra::extract(focal_elev_raster, feature_points, 
                                            method = 'simple', bind = T)
   focal_slope_extraction <- terra::extract(focal_slope_raster, feature_points, 
                                            method = 'simple', bind = T)
+  focal_lm_extraction    <- terra::extract(focal_lm_raster, feature_points, 
+                                           method = 'simple', bind = T)
+  focal_pa_extraction    <- terra::extract(focal_pa_raster, feature_points, 
+                                           method = 'simple', bind = T)
   
   
   feature_space_df[, str_c('elev_buf_', buffer_size)]  <- focal_elev_extraction[[2]]
   feature_space_df[, str_c('slope_buf_', buffer_size)] <- focal_slope_extraction[[2]]
+  feature_space_df[, str_c('lm_buf_', buffer_size)]    <- focal_lm_extraction[[2]]
+  feature_space_df[, str_c('pa_buf_', buffer_size)]    <- focal_pa_extraction[[2]]
 }
 
 
