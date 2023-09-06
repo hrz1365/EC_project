@@ -118,15 +118,15 @@ elev_extraction  <- terra::extract(cur_elev_raster_1km, feature_points,
                                    method = 'simple', bind = T)
 slope_extraction <- terra::extract(cur_slope_raster_1km, feature_points, 
                                    method = 'simple', bind = T)
-lm_extraction    <- terra::extract(cur_lm_raster_1km, feature_points, 
-                                   method = 'simple', bind = T)
-pa_extraction    <- terra::extract(cur_pa_raster_1km, feature_points, 
-                                   method = 'simple', bind = T)
+# lm_extraction    <- terra::extract(cur_lm_raster_1km, feature_points, 
+#                                    method = 'simple', bind = T)
+# pa_extraction    <- terra::extract(cur_pa_raster_1km, feature_points, 
+#                                    method = 'simple', bind = T)
 
 feature_space_df[, 'elev']  <- elev_extraction[[2]]
 feature_space_df[, 'slope'] <- slope_extraction[[2]]
-feature_space_df[, 'lm']    <- lm_extraction[[2]]
-feature_space_df[, 'pa']    <- pa_extraction[[2]]
+# feature_space_df[, 'lm']    <- lm_extraction[[2]]
+# feature_space_df[, 'pa']    <- pa_extraction[[2]]
 
 
 
