@@ -31,8 +31,8 @@ buffer_sizes    <- c(5000, 10000, 25000, 50000, 100000)
 fst_actual_year <- 1970
 lst_actual_year <- 2020
 built_up_yrs    <- seq(fst_actual_year, lst_actual_year, 10)
-fst_year        <- 1980
-lst_year        <- 2010
+fst_year        <- 2060
+lst_year        <- 2090
 
 
 boundaries_path     <- 'boundaries'
@@ -49,12 +49,6 @@ feature_points_path <- file.path(fs_path, str_c(cur_country, '_feature_points_ra
 
 cur_bu_raster_1km <- file.path(rasters_path, paste0(cur_country, '_bu', '.tif')) %>%
   rast()
-
-
-for (i in seq(1, 17)){
-  
-  cur_bu_raster_1km[[i]] <- cur_bu_raster_1km[[i]] / max(values(cur_bu_raster_1km[[i]]), na.rm = T)
-}
 
 cur_elev_raster_1km <- file.path(rasters_path, str_c(cur_country, '_elev', '.tif')) %>%
   rast()
@@ -89,6 +83,9 @@ for (year in seq(fst_year, lst_year, 10)){
   }
 
   
+  feature_space_df[, str_c('bu_', year)] <- terra::extract(cur_bu_layer, feature_points, method = 'simple', bind = T)[[2]]
+  
+  
   for (buffer_size in buffer_sizes){
     
     cat('\nThe buffer size is: ', buffer_size)
@@ -99,29 +96,35 @@ for (year in seq(fst_year, lst_year, 10)){
                                                type = 'circle')
     neighborhood[neighborhood > 0] <- 1
     
+    distance_decay_mat <- distance_decay_matrix(buffer_size / 1e3)
+    
+    final_neighborhood <- neighborhood * distance_decay_mat
+    
     
     # Derive the focal raster based  on the neighborhood
-    built_up_focal <- terra::focal(cur_bu_layer, w = neighborhood, fun = mean,
-                                   fillvalue = NA, expand = F, na.rm = T)
+    built_up_focal <- focal(cur_bu_layer, w = final_neighborhood, fun = sum,
+                            na.policy = 'omit', fillvalue = NA, expand = F, na.rm = T)
     
     
     # Extract focal raster to points 
     focal_extraction <- terra::extract(built_up_focal, feature_points, method = 'simple', bind = T)
     
     
-    feature_space_df[, str_c('bu_buf_', buffer_size, '_', year)] <- focal_extraction[['focal_mean']]
+    feature_space_df[, str_c('bu_buf_', buffer_size, '_', year)] <- focal_extraction[[2]]
   }
   
 }
 
 
 # Extract the target attribute, which is built-up proportion in 2020
-if (lst_year < 2020) {
+target_year <- lst_year + 10
+target_col  <- str_c('bu_', target_year)
+if (target_year == 2020) {
   
   cur_bu_layer       <- cur_bu_raster_1km[[15]]
   builtup_extraction <- terra::extract(cur_bu_layer, feature_points, method = 'simple',
                                        bind = T)
-  feature_space_df[, 'bu_2020'] <- builtup_extraction[[2]]
+  feature_space_df[, target_col] <- builtup_extraction[[2]]
   
   
   # Categorize different levels of built-up in 2020
@@ -131,7 +134,19 @@ if (lst_year < 2020) {
     (bu_2020 > quantile(bu_2020, 0.75)) & (bu_2020 <= quantile(bu_2020, 0.9)), 3,
     (bu_2020 > quantile(bu_2020, 0.9)), 4
   )]
-}
+  
+} 
+
+# else {
+#   
+#   ml_output_path  <- file.path(ml_path, str_c('lstm_', target_year, '.pkl'))
+#   cur_bu_layer    <- generate_ml_raster(ml_output_path, feature_points_path,
+#                                         cur_elev_raster_1km)
+#   
+#   builtup_extraction <- terra::extract(cur_bu_layer, feature_points, method = 'simple',
+#                                        bind = T)
+#   feature_space_df[, target_col] <- builtup_extraction[[2]]
+# }
 
 
 

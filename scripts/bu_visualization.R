@@ -55,6 +55,9 @@ cur_bu_raster <- bu_raster %>%
   terra::mask(admin_0)
 
 
+cur_bu_raster <- cur_bu_raster / 10000
+
+
 
 # Aggregate by an order of magnitude to 1km resolution
 cur_bu_raster_1km <- aggregate_raster(cur_bu_raster, fact = 10, fun = 'mean',
@@ -62,20 +65,20 @@ cur_bu_raster_1km <- aggregate_raster(cur_bu_raster, fact = 10, fun = 'mean',
 
 
 # Convert to data-frame for plotting of the built-up in 2020
-cur_bu_2020_df <- cur_bu_raster_1km[[15]] %>%
-  as.data.frame(xy = T) %>%
-  drop_na()
+# cur_bu_2020_df <- cur_bu_raster_1km[[15]] %>%
+#   as.data.frame(xy = T) %>%
+#   drop_na()
 
 
-cur_map <- ggplot() +
-  geom_raster(data = cur_bu_2020_df, aes(x = x, y = y, fill = BUT_15)) +
-  geom_sf(fill = 'transparent', data = admin_0) +
-  scale_fill_viridis_c(name = 'Built-up Proportion', direction = -1) +
-  labs(x = '', y = '', title = 'Built-up Proportion in Kenya in 2020') +
-  theme(legend.position  = 'bottom',
-        panel.grid       = element_blank(),
-        panel.background = element_rect(fill = NA, color = 'black')) +
-  guides(fill =guide_colorsteps(title.position = 'top', barwidth = unit(4, 'in'),
-                                barheight = 0.5))
+# cur_map <- ggplot() +
+#   geom_raster(data = cur_bu_2020_df, aes(x = x, y = y, fill = BUT_15)) +
+#   geom_sf(fill = 'transparent', data = admin_0) +
+#   scale_fill_viridis_c(name = 'Built-up Proportion', direction = -1) +
+#   labs(x = '', y = '', title = 'Built-up Proportion in Kenya in 2020') +
+#   theme(legend.position  = 'bottom',
+#         panel.grid       = element_blank(),
+#         panel.background = element_rect(fill = NA, color = 'black')) +
+#   guides(fill =guide_colorsteps(title.position = 'top', barwidth = unit(4, 'in'),
+#                                 barheight = 0.5))
   
 

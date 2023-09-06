@@ -49,7 +49,7 @@ class buPredictionModel():
 
     def define(self):
         fst_input       = Input(batch_shape = (256, self.num_time_steps, self.dim_var_features))
-        fst_lstm_output = LSTM(64)(fst_input)
+        fst_lstm_output = LSTM(128)(fst_input)
         # snd_lstm_output = LSTM(128)(fst_lstm_output)
         # trd_lstm_output = LSTM(64)(snd_lstm_output)
 
@@ -77,19 +77,19 @@ class buPredictionModel():
 
 
     
-    def model_fit(self, model, x_train_bu, x_train_elev, x_test_bu, x_test_elev, y_train, y_test):
+    def model_fit(self, model, x_train_bu, x_train_con, x_test_bu, x_test_con, y_train, y_test):
 
         x_train_bu   = x_train_bu.reshape((-1, self.num_time_steps, self.dim_var_features))
-        x_train_elev = x_train_elev.reshape((-1, self.dim_cons_features))
+        x_train_con  = x_train_con.reshape((-1, self.dim_cons_features))
 
         x_test_bu   = x_test_bu.reshape((-1, self.num_time_steps, self.dim_var_features))
-        x_test_elev = x_test_elev.reshape((-1, self.dim_cons_features))
+        x_test_con  = x_test_con.reshape((-1, self.dim_cons_features))
 
 
         model.compile(loss = 'mse', optimizer = tf.keras.optimizers.Adam(learning_rate=0.01))
 
-        history = model.fit([x_train_bu, x_train_elev], y_train, epochs = 30, verbose = True,
-                            validation_data = ([x_test_bu, x_test_elev], y_test))
+        history = model.fit([x_train_bu, x_train_con], y_train, epochs = 20, verbose = True,
+                            validation_data = ([x_test_bu, x_test_con], y_test))
 
         return(model, history) 
 

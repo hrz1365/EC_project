@@ -8,6 +8,7 @@
 
 # Pacakages 
 from pathlib import Path 
+import pandas as pd
 import pickle
 
 
@@ -18,10 +19,10 @@ model_output_path       = main_dir / 'ml_outputs'
 fs_dir                  = main_dir / 'feature_space'
 train_ids_pkl           = fs_dir / 'train_ids.pkl'
 test_ids_pkl            = fs_dir / 'test_ids.pkl'
-bu_feature_space_path   = fs_dir / 'ken_bu_fs_2030.csv'
+bu_feature_space_path   = fs_dir / 'ken_bu_fs_2040.csv'
 con_feature_space_path  = fs_dir / 'ken_const_fs.csv'
 
-num_time_steps, dim_var_features, dim_cons_features = 4, 5, 20
+num_time_steps, dim_var_features, dim_cons_features = 4, 6, 24
 prediction_year = int(bu_feature_space_path.stem.split('_')[-1]) + 10
 
 
@@ -49,7 +50,7 @@ with open(test_ids_pkl, 'rb') as test_ids_load:
 
 train_bu, test_bu, train_con, test_con = model_obj.train_test_extract(train_ids, test_ids)
 
-# Scale the data into -1 to 1
+# Scale the data into 0 to 1
 con_scaler, x_train_con, x_test_con = model_obj.scale_features(train_con, test_con)
 
 
@@ -61,7 +62,11 @@ if prediction_year == 2020:
 train_predictions = model_obj.model_predict(cur_model, train_bu.values, x_train_con)
 test_predictions  = model_obj.model_predict(cur_model, test_bu.values, x_test_con)
 
+# train_predictions = model_obj.model_predict(cur_model, x_train_bu, x_train_con)
+# test_predictions  = model_obj.model_predict(cur_model, x_test_bu, x_test_con)
+
 
 raster_content = model_obj.create_raster_content(train_ids, train_predictions, 
                                                  test_ids, test_predictions,
                                                  raster_content_path)
+

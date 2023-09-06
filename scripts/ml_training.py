@@ -19,12 +19,12 @@ fs_dir                  = main_dir / 'feature_space'
 model_output_path       = main_dir / 'ml_outputs'
 train_ids_pkl           = fs_dir / 'train_ids.pkl'
 test_ids_pkl            = fs_dir / 'test_ids.pkl'
-bu_feature_space_path   = fs_dir / 'ken_bu_fs_2010.csv'
+bu_feature_space_path   = fs_dir / 'ken_bu_fs_2040.csv'
 con_feature_space_path  = fs_dir / 'ken_const_fs.csv'
 
 
-num_time_steps, dim_var_features, dim_cons_features = 4, 5, 15
-model_name = 'lstm_elev_bu_all_2020.h5'
+num_time_steps, dim_var_features, dim_cons_features = 6, 6, 24
+model_name = 'lstm_2040.h5'
 
 
 
@@ -98,15 +98,3 @@ model_obj.plot_series(x = epochs, y = loss, end = 30, title = 'Mean Squared Erro
 
 
 
-# Make predictions to generate the modeled raster
-train_predictions = model_obj.model_predict(cur_model, x_train_bu, x_train_elev_scaled)
-test_predictions  = model_obj.model_predict(cur_model, x_test_bu, x_test_elev_scaled)
-
-
-
-# Create a pickel layer to bo converted to a raster in the R script
-prediction_year     = extract_pred_year(bu_feature_space_df)
-raster_content_path = model_output_path / 'lstm_{}.pkl'.format(prediction_year)
-raster_content      = model_obj.create_raster_content(train_ids, train_predictions, 
-                                                      test_ids, test_predictions,
-                                                      raster_content_path)

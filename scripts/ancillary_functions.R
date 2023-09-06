@@ -8,9 +8,16 @@
 
 # Options and Packages ----------------------------------------------------
 
-if (!require(terra))      install.packages('terra')       else library(terra)
-if (!require(tidyverse))  install.packages('tidyverse')   else library(tidyverse)
-if (!require(data.table)) install.packages('data.table')  else library(data.table)
+if (!requireNamespace('terra', quietly = T))       install.packages('terra') 
+if (!requireNamespace('data.table', quietly = T))  install.packages('data.table') 
+if (!requireNamespace('tidyverse', quietly = T))   install.packages('tidyverse')
+if (!requireNamespace('reticulate', quietly = T))  install.packages('reticulate') 
+
+
+library(terra)
+library(data.table)
+library(tidyverse)
+library(reticulate)
 
 # For python
 Sys.setenv(RETICULATE_PYTHON = "venv/Scripts/python.exe")
@@ -94,9 +101,40 @@ generate_ml_raster <- function(ml_output_path, feature_points_path, base_raster)
   
   # Point to raster conversion based on predicted values
   predicted_bu_raster <- rasterize(merged_vect, base_raster, field = 'predicted_bu')
-  predicted_bu_raster[predicted_bu_raster < 0] <- 0
+  predicted_bu_raster[predicted_bu_raster < 0]  <- 0
+  predicted_bu_raster[predicted_bu_raster >= 1] <- 1
   
   
   return(predicted_bu_raster)
 }
+
+
+
+# Generate the distance decay neighborhood based on buffer distance
+distance_decay_matrix <- function(buffer_distance){
+  
+  length_index   <-  2 * buffer_distance + 1
+  
+  neighborhood_m <- matrix(data = 0, nrow = length_index, ncol = length_index)
+  
+  focal_point = c(buffer_distance + 1, buffer_distance + 1)
+  
+  for (i in 1:length_index){
+    
+    for (j in 1:length_index){
+      
+      neighborhood_m[i, j] <- dist(rbind(c(i, j), 
+                                         c(focal_point[1], focal_point[2])))
+    }
+  }
+  
+  
+  neighborhood_m <- exp(-2 * neighborhood_m)
+  neighborhood_m[focal_point[1], focal_point[2]] <- 0
+  neighborhood_m <- neighborhood_m / sum(neighborhood_m)
+  
+  return(neighborhood_m)
+}
+
+
 

@@ -10,9 +10,9 @@
 
 # Options and Packages ----------------------------------------------------
 
-if (!requireNamespace('terra', quietly = T))         install.packages('terra') 
-if (!requireNamespace('data.table', quietly = T))    install.packages('data.table') 
-if (!requireNamespace('tidyverse', quietly = T))     install.packages('tidyverse') 
+if (!requireNamespace('terra', quietly = T))      install.packages('terra') 
+if (!requireNamespace('data.table', quietly = T)) install.packages('data.table') 
+if (!requireNamespace('tidyverse', quietly = T))  install.packages('tidyverse') 
 
 
 library(terra)
@@ -113,6 +113,27 @@ if (!file.exists(fs_space_path)) {
 
 
 
+# Extract raster to points 
+elev_extraction  <- terra::extract(cur_elev_raster_1km, feature_points, 
+                                   method = 'simple', bind = T)
+slope_extraction <- terra::extract(cur_slope_raster_1km, feature_points, 
+                                   method = 'simple', bind = T)
+lm_extraction    <- terra::extract(cur_lm_raster_1km, feature_points, 
+                                   method = 'simple', bind = T)
+pa_extraction    <- terra::extract(cur_pa_raster_1km, feature_points, 
+                                   method = 'simple', bind = T)
+
+feature_space_df[, 'elev']  <- elev_extraction[[2]]
+feature_space_df[, 'slope'] <- slope_extraction[[2]]
+feature_space_df[, 'lm']    <- lm_extraction[[2]]
+feature_space_df[, 'pa']    <- pa_extraction[[2]]
+
+
+
+feature_space_df <- feature_space_df %>%
+  fill(slope, .direction = 'downup')
+
+
 # Extract built-up raster to points
 for (buffer_size in buffer_sizes){
   
@@ -123,6 +144,7 @@ for (buffer_size in buffer_sizes){
   neighborhood                   <- focalMat(cur_elev_raster_1km, d = buffer_size,
                                              type = 'circle')
   neighborhood[neighborhood > 0] <- 1
+  
   
   
   # Derive the focal elevation and slope rasters based  on the neighborhood
