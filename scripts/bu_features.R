@@ -31,8 +31,8 @@ buffer_sizes    <- c(5000, 10000, 25000, 50000, 100000)
 fst_actual_year <- 1970
 lst_actual_year <- 2020
 built_up_yrs    <- seq(fst_actual_year, lst_actual_year, 10)
-fst_year        <- 2060
-lst_year        <- 2090
+fst_year        <- 2000
+lst_year        <- 2030
 
 
 boundaries_path     <- 'boundaries'
@@ -53,6 +53,17 @@ cur_bu_raster_1km <- file.path(rasters_path, paste0(cur_country, '_bu', '.tif'))
 cur_elev_raster_1km <- file.path(rasters_path, str_c(cur_country, '_elev', '.tif')) %>%
   rast()
 
+cur_lm_raster_1km <- file.path(rasters_path, str_c(cur_country, '_lm.tif')) %>%
+  rast()
+
+cur_pa_raster_1km <- file.path(rasters_path, str_c(cur_country, '_pa', '.tif')) %>%
+  rast() %>%
+  resample(cur_lm_raster_1km, method = 'near')
+
+
+cur_lm_raster_1km <- ifel(cur_lm_raster_1km == 0, 0, 1)
+cur_pa_raster_1km <- ifel(cur_pa_raster_1km == 0, 1, 0)
+cur_limit_raster  <- cur_lm_raster_1km * cur_pa_raster_1km 
 
 
 # Read the feature space datasets created at the "cons_features" script
@@ -80,6 +91,7 @@ for (year in seq(fst_year, lst_year, 10)){
     ml_output_path  <- file.path(ml_path, str_c('lstm_', year, '.pkl'))
     cur_bu_layer    <- generate_ml_raster(ml_output_path, feature_points_path,
                                           cur_elev_raster_1km)
+    cur_bu_layer    <- cur_bu_layer * cur_limit_raster 
   }
 
   
